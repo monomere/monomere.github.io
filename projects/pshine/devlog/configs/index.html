@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="/style.css">
+		<title>devlog #1 - pshine - monomere</title>
+	</head>
+	<body>
+		<header>
+			<nav>
+				<span><a href="/#projects">projects</a></span>
+				<span>&middot;</span>
+				<span><b>devlog #1</b></span>
+				<span>-</span>
+				<span><a href="/projects/pshine">pshine</a></span>
+				<span>&middot;</span>
+				<span><a href="/#about">about me</a></span>
+			</nav>
+		</header>
+		<main><article>
+			<h1>Celestial body configration files</h1>
+			<time datetime="2024-02-24">26th of February 2025</time>
+			<hr>
+			<p>
+				After procrastinating on this feature for a while,
+				I finally implemented planet/star configs. Interestingly,
+				the hardest part was not the reading itself (it was
+				actually pretty easy,
+				<a href="https://github.com/cktan/tomlc99">tomlc99</a>
+				has a nice API!), but removing all the hardcoded stuff
+				from the renderer. And I don't actually regret doing that,
+				because I was able to actually make progress because of it!
+				I've tried rewriting this in C++ or Rust countless times (like 5)
+				and it all kind of slowed down because of me trying to come up
+				with nice abstractions and trying to design the engine so that
+				its nice to work with. Here, I just wrote code without a lot of
+				thinking beforehand; while I have made some abstractions, they're
+				very high-level and aren't slowing me down a whole lot. I'm not
+				proof reading all that by the way, it's like 1am.
+			</p>
+			<p>
+				Anyway, here's
+				<a href="https://github.com/monomere/pshine/blob/main/data/celestial/earth.toml">the config file for Earth</a>:
+			</p>
+			<pre><b>[planet]</b>
+name <span class="punct">=</span> "Earth"
+radius <span class="punct">=</span> 6_371_000.0
+parent <span class="punct">=</span> "Sol"
+is_static <span class="punct">=</span> false
+mass <span class="punct">=</span> 1.0
+mu <span class="punct">=</span> 3.98600436e-4
+average_color <span class="punct">=</span> 0xf9bf2c
+gizmo_color <span class="punct">=</span> 0xf9bf2c
+
+<b>[rotation]</b>
+speed <span class="punct">=</span> -0.026178
+axis <span class="punct">=</span> [0.0, 1.0, 0.0]
+
+<b>[orbit]</b>
+argument <span class="punct">=</span> 0.0
+eccentricity <span class="punct">=</span> 0.0167086
+inclination <span class="punct">=</span> 0.0
+longitude <span class="punct">=</span> 0.0
+semimajor <span class="punct">=</span> 149598.023
+true_anomaly <span class="punct">=</span> 0.0
+
+<b>[atmosphere]</b>
+height <span class="punct">=</span> 100_000.0
+rayleigh_coefs <span class="punct">=</span> [3.8, 13.5, 33.1]
+rayleigh_falloff <span class="punct">=</span> 13.5
+mie_coef <span class="punct">=</span> 20.1
+mie_ext_coef <span class="punct">=</span> 1.1
+mie_g_coef <span class="punct">=</span> -0.87
+mie_falloff <span class="punct">=</span> 18.0
+intensity <span class="punct">=</span> 20.0
+
+<b>[surface]</b>
+albedo_texture_path <span class="punct">=</span> "data/textures/earth_5k.jpg"
+lights_texture_path <span class="punct">=</span> "data/textures/earth_lights_2k.jpg"
+bump_texture_path <span class="punct">=</span> "data/textures/earth_bump_2k.jpg"
+spec_texture_path <span class="punct">=</span> "data/textures/earth_spec_2k.jpg"
+</pre>
+		</article></main>
+		<footer>
+			Copyright &copy; 2024 monomere
+		</footer>
+	</body>
+</html>

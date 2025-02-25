@@ -14,9 +14,24 @@ img {
 }
 
 main {
-	width: 80%;
+	width: 50%;
 	padding: 1rem;
 }
+
+@media screen and (max-width: 1000px) {
+	main {
+		width: 70%;
+		padding: 0.5rem;
+	}
+}
+
+@media screen and (max-width: 800px) {
+	main {
+		width: 80%;
+		padding: 0.5rem;
+	}
+}
+
 
 @media screen and (max-width: 500px) {
 	main {
@@ -27,4 +42,31 @@ main {
 
 footer {
 	color: gray;
+	margin: 1rem 0;
+}
+
+pre {
+	text-wrap: nowrap;
+	overflow: scroll;
+	background: #e0e0e0;
+	padding: 1rem;
+	border-radius: 7px;
+}
+
+pre .punct {
+	color: #777;
+	font-style: normal;
+}
+
+article h1 {
+	margin-bottom: 0.5rem;
+}
+
+time {
+	display: inline-block;
+	color: gray;
+}
+
+hr {
+	margin: calc(0.5rem + 5px) 0px;
 }
