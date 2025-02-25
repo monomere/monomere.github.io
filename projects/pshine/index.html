@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="/style.css">
+		<title>pshine - monomere</title>
+	</head>
+	<body>
+		<header>
+			<nav>
+				<span><a href="/#projects">projects</a></span>
+				<span>&middot;</span>
+				<span><b>pshine</b></span>
+				<span>-</span>
+				<span><a href="/">monomere</a></span>
+				<span>&middot;</span>
+				<span><a href="/#about">about me</a></span>
+			</nav>
+		</header>
+		<main>
+			<section id="about">
+				<h1>About</h1>
+				<p>
+					Pshine ("planet shine", name inspired by KSP mod of same name) is a work-in-progress
+					<a href="https://github.com/monomere/pshine">open-source</a>
+					space simulator "game" written in Vulkan and C23 (because why not).
+					Currently, the implemented features include:
+				</p>
+				<ul>
+					<li>Atmospheric scattering</li>
+					<li>Patched conics orbital simulation</li>
+					<li>200 lines of octahedral sphere (not terrain!) mesh generation</li>
+					<li>Simple sphere LOD system</li>
+					<li>Real sizes/values (so the Earth's radius is 6,371,000 meters)</li>
+					<li>C23 math library with a goofy python generator</li>
+					<li>Silly build system using only ninja files</li>
+				</ul>
+				<p>I plan to add:</p>
+				<ul>
+					<li>Proper terrain mesh</li>
+					<li>Minimal spacecraft simulation (so orbital maneuvers)</li>
+					<li>Other stuff probably, I don't know</li>
+				</ul>
+				<p>
+					<b>NB:</b> I'm only workin on this when I feel like it, this isn't anything serious.
+				</p>
+			</section>
+
+			<section id="blog">
+				<h1>Devlog</h1>
+				<ol>
+					<li><a href="devlog/hello">Hello</a></li>
+				</ol>
+			</section>
+			
+			<section id="screenshots">
+				<h1>Screenshots</h1>
+				<img
+					src="/images/pshine/orbit.png"
+					alt="Earth and sun from very far away, so that half the Earth's orbit is visible.">
+				<img
+					src="/images/pshine/sunrise.png"
+					alt="Sunrise from space (or almost space), Earth fills up the right side of the screenshot, with the atmosphere showing a gradient from green to blue.">
+				<img
+					src="/images/pshine/side.png"
+					alt="View of Earth partially in shadow from ~10 million km, with the Sun visible on the left.">
+			</section>
+		</main>
+		<footer>
+			Copyright &copy; 2024 monomere
+		</footer>
+	</body>
+</html>
