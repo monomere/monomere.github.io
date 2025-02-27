@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="/style.css">
+		<title>devlog #3 - pshine - monomere</title>
+	</head>
+	<body>
+		<header>
+			<nav>
+				<span><a href="/#projects">projects</a></span>
+				<span>&middot;</span>
+				<span><b>devlog #3</b></span>
+				<span>-</span>
+				<span><a href="/projects/pshine">pshine</a></span>
+				<span>&middot;</span>
+				<span><a href="/#about">about me</a></span>
+			</nav>
+		</header>
+		<main><article>
+			<h1>Life Jupiter</h1>
+			<time datetime="2024-02-27">27th of February 2025</time>
+			<hr>
+			<p>
+				Adding quality-of-life improvements feels nice! I added a "game config"
+				file with all the paths to the planet configs, and Jupiter and
+				one of the four Galilean moons, Io.
+			</p>
+			<p>
+				I also addressed a small issue,
+				which made Jupiter's label look like "Jopiter" (and that's a goofy name).
+				The problem was that
+				the moon's label (Io) overlapped with Jupiter's when viewed from Earth.
+				Fixing that was quite easy: you only need to check if the distance
+				between a celestial body and its parent (relative the the
+				current viewing position, so
+				<code><b>sqrt</b>((<b>ParentPos</b>
+					- <b>ChildPos</b>) / (<b>ParentPos</b> - <b>ChildPos</b>)) &lt; <b>Threshold</b></code>)
+			</p>
+			<p>So this is the view from the Earth</p>
+			<img src="/images/pshine/gui-1.png"
+				alt="Only Jupiter's label is visible, but both Earth's and Moon's are.">
+			<p>And from Io (temporary Mars texture)</p>
+			<img src="/images/pshine/gui-2.png"
+				alt="The opposite, both Jupiter's and Io's labels are visible, but Moon's isn't.">
+		</article></main>
+		<footer>
+			Copyright &copy; 2025 monomere
+		</footer>
+	</body>
+</html>
