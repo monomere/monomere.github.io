@@ -19,8 +19,9 @@
 			</nav>
 		</header>
 		<main><article>
-			<h1>Life Jupiter</h1>
+			<h1>Jovian Life</h1>
 			<time datetime="2024-02-27">27th of February 2025</time>
+			<small>Edited 3rd of March 2025 (typos)</small>
 			<hr>
 			<p>
 				Adding quality-of-life improvements feels nice! I added a "game config"
@@ -35,8 +36,8 @@
 				Fixing that was quite easy: you only need to check if the distance
 				between a celestial body and its parent (relative the the
 				current viewing position, so
-				<code><b>sqrt</b>((<b>ParentPos</b>
-					- <b>ChildPos</b>) / (<b>ParentPos</b> - <b>ChildPos</b>)) &lt; <b>Threshold</b></code>)
+				<code><b>distance</b>(<b>ParentPos</b>, <b>ChildPos</b>) /
+					<b>distance</b>(<b>ParentPos</b>, <b>CameraPos</b>) &lt; <b>Threshold</b></code>)
 			</p>
 			<p>So this is the view from the Earth</p>
 			<img src="/images/pshine/gui-1.png"
