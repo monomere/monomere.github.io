@@ -48,13 +48,18 @@ footer {
 pre {
 	text-wrap: nowrap;
 	overflow: scroll;
-	background: #e0e0e0;
+	background: #f1f1f1;
 	padding: 1rem;
 	border-radius: 7px;
 }
 
 pre .punct {
 	color: #777;
+	font-style: normal;
+}
+
+pre .comment {
+	color: #999;
 	font-style: normal;
 }
 
@@ -70,3 +75,10 @@ time {
 hr {
 	margin: calc(0.5rem + 5px) 0px;
 }
+
+:where(h1) {
+	margin-block: 0.67em;
+	font-size: 2em;
+}
+
+.katex { line-height: 0.5 !important; }

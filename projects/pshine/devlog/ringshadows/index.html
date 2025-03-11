@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="/style.css">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" integrity="sha384-zh0CIslj+VczCZtlzBcjt5ppRcsAmDnRem7ESsYwWwg3m/OaJ2l4x7YBZl9Kxxib" crossorigin="anonymous">
+		<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js" integrity="sha384-Rma6DA2IPUwhNxmrB/7S3Tno0YY7sFu9WSYMCuulLhIqYSGZ2gKCJWIqhBWqMQfh" crossorigin="anonymous"></script>
+		<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js" integrity="sha384-hCXGrW6PitJEwbkoStFjeJxv+fSOOQKOPbJxSfM6G5sWZjAyWhXiTIIAmQqnlLlh" crossorigin="anonymous"
+				onload="renderMathInElement(document.body);"></script>
+		<title>devlog #4 - pshine - monomere</title>
+	</head>
+	<body>
+		<header>
+			<nav>
+				<span><a href="/#projects">projects</a></span>
+				<span>&middot;</span>
+				<span><b>devlog #4</b></span>
+				<span>-</span>
+				<span><a href="/projects/pshine">pshine</a></span>
+				<span>&middot;</span>
+				<span><a href="/#about">about me</a></span>
+			</nav>
+		</header>
+		<main><article>
+			<h1>Ring Shadows</h1>
+			<time datetime="2024-03-11">11th of March 2025</time>
+			<hr>
+			<p>
+				I needed to draw the shadow of a planet on its rings. To render the rings, each point on a disk around the planet is drawn separately, and the inputs are the angle of the line from the center to the point and the length of that line. That turns out to be a polar coordinate system, where each point is parametrized by the length \(r\) and angle \(\theta\). 
+			</p>
+			<p>
+				Now the shadows. Since the light source (Sun) is pretty far away (something like a trillion meters, a Terameter) we can consider its rays parallel. That means that in an ideal world the planet's "shadow" (the portion of space that light doesn't reach) is a cylinder the same radius as the planet, and its caps perpendicular to the light rays.
+				
+				To simplify things, let's consider the circle with radius \(r\) (so that each point is on that circle):
+			</p>
+			<figure>
+				<img id="geometry-graphic" src="_canvas.svg">
+				<figcaption>\(\alpha\) is the angle of the Sun, \(\beta\) and \(\beta'\) are the angles of the shadow's edges.</figcaption>
+			</figure>
+			<p>
+				To know if the current point \((r,\theta)\) is in shadow, we need to check if \(\theta\) is between the angles \(\beta\) and
+				\(\beta'\). After a bit of trigonometry, we can conclude that
+			</p>
+			<figure>
+				\(\beta,\beta' = \alpha \pm \arcsin\left(\frac{R_p}{r}\right)\)
+			</figure>
+			<p>
+				Ok, looks like we're done! Yay! Here's the shader code:
+			</p>
+			<pre><b>bool</b> is_in_shadow(
+  <b>float</b> radius,   <span class="comment">// = r</span>
+  <b>float</b> angle,    <span class="comment">// = θ</span>
+  <b>float</b> sun_angle <span class="comment">// = α</span>
+) {
+  <b>float</b> d = <b>acos</b>(relative_planet_radius / radius);
+  <b>float</b> l = angle - d; <span class="comment">// = β or β'</span>
+  <b>float</b> r = angle + d; <span class="comment">// = β' or β</span>
+  <b>return</b> l &lt;= angle && angle &gt;= r;
+}</pre>
+			<p>
+				If we actually run this, it works! But let's fast-forward a couple hundred years (Saturn has a big orbit) just to be sure that it doesn't break.
+			</p>
+				
+			<p><em>Oh...</em></p>
+				
+			<p>
+				Looks like we forgot that \(\alpha\) and \(\theta\) are constrained to \([-\pi, \pi]\). That's what
+				<code>atan2</code> returns, but it could just as well have been constrained to \([0, 2\pi]\), the problem would still be there, just at different angles. Let's try to come up with an example that breaks our check.
+				If \(\theta\) is say \(-3\), and \((\beta, \beta')=(\pi - 0.5, \pi + 0.5)\), on a unit circle it would look like this:
+			</p>
+			<figure>
+				<img id="unit-circle-graphic" src="_canvas2.svg">
+				<!-- <figcaption></figcaption> -->
+			</figure>
+			<p>
+				Notice how \(\theta\) looks like its inside of the blue region, but numerically, the angles don't overlap: \(\pi-0.5< -3 < \pi+0.5\) is false. To actually check if the angle is inside, we need to add \(\pm 2\pi\) to it, to bring it in the same period as the edges. Interestingly, we don't even need to check for this situation (<code>if</code>s are costly on the GPU)! We can always compare \(\theta\), \(\theta+2\pi\), and \(\theta-2\pi\) with the \(\beta\)s and if any of the results is true, the point is between the angles. This is how it would look in code:
+			</p>
+			<pre><span class="comment">// returns true if a &lt;= b &lt;= c.</span>
+<b>bool</b> is_ordered(<b>float</b> a, <b>float</b> b, <b>float</b> c) {
+  <b>return</b> a &lt;= b && b &lt;= c;
+}
+
+<b>bool</b> is_in_shadow(
+  <b>float</b> radius,   <span class="comment">// = r</span>
+  <b>float</b> angle,    <span class="comment">// = θ</span>
+  <b>float</b> sun_angle <span class="comment">// = α</span>
+) {
+  <b>float</b> d = <b>acos</b>(relative_planet_radius / radius);
+  <b>float</b> l = angle - d; <span class="comment">// = β or β'</span>
+  <b>float</b> r = angle + d; <span class="comment">// = β' or β</span>
+  <b>return</b>
+    is_ordered(l, angle - 2.0 * PI, r) ||
+    is_ordered(l, angle, r) ||
+    is_ordered(l, angle + 2.0 * PI, r);
+}</pre>
+		<p>Here's the pretty image:</p>
+		<img src="/images/pshine/saturn-rings.png" alt="I'm too lazy sorry :( Saturn from the side, camera facing the sun.">
+		</article></main>
+		<style>
+			figure {
+				width: 100%;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.5rem;
+				margin: 0;
+				padding: 0;
+			}
+			figure > img {
+				width: 70%;
+				min-width: 300px;
+			}
+		</style>
+		<footer>
+			Copyright &copy; 2025 monomere
+		</footer>
+	</body>
+</html>
