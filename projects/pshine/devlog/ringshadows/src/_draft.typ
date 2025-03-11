@@ -1,6 +1,16 @@
-#import "@local/cetz:0.3.4"
+#import "@preview/cetz:0.3.4"
 #set text(size: 15pt)
-#set page(width: auto, height: auto, margin: 0pt)
+#set par(justify: true)
+
+= Disk Shadows
+
+
+I needed to draw the shadow of a planet on its rings. Because of how rendering is handled,
+we actually have a polar coordniates system, with the planet in the center, and the end of the ring disk at $r=1$.
+// Instead of solving for straight lines in polar coordinates, we just take a specific $r in ["InnerR"/"OuterR", 1]$ and figure out what angle we should use.
+// Note that for the shadow to make sense, the Sun should actually be on the other side, but this is how I originally drew this out (just add $2pi$ to fix it)
+
+
 #let windows(arr, size) = {
   array.range(arr.len() - size + 1).map(i => {
     arr.slice(i, count: size)
@@ -222,71 +232,98 @@ align(center,
 )
 }
 
-// #align(center,
-//   cetz.canvas({
-//     import cetz.draw: *
-//     set-style(stroke: 0.4pt,
-//       grid: (
-//         stroke: gray + 0.2pt,
-//         step: 0.5
-//       )
-//     )
-//     let r = 1.3
-//     scale(3)
-//     grid((-1.5, -1.5), (1.5, 1.5))
-//     content((r, 0), [$0$], anchor: "south-west", padding: .1)
-//     content((-r,0), [$pi$], anchor: "south-east", padding: .1)
-//     content((-r,0), [$-pi$], anchor: "north-east", padding: .1)
-//     scale(x: -1)
-//     rotate(90deg)
-//     line((-1.5, 0), (1.5, 0))
-//     line((0, -1.5), (0, 1.5))
-//     circle((0, 0), radius: r)
-//     let angl = (a, name, c, d) => {
-//       line((0, 0), (r * calc.sin(a), r * calc.cos(a)), stroke: (
-//         thickness: 1pt,
-//         paint: c,
-//       ))
-//       if a != 0.0deg {
-//         arc((0, 0), start: 90deg, stop: 90deg-a, radius: d, anchor: "origin", name: name)
-//       }
-//     }
-//     angl(-3rad, "theta", red, 0.2)
-//     content((name: "theta", anchor: -3rad), [$theta$], anchor: "north-west", padding: .1)
-//     let beta1 = calc.pi * 1rad + 0.5rad
-//     let beta2 = calc.pi * 1rad - 0.5rad
-//     angl(beta1, "beta1", blue, 0.3)
-//     angl(beta2, "beta2", blue, 0.4)
-//     arc((0,0), anchor: "origin",
-//       start: 90deg-beta1, stop: 90deg-beta2,
-//       radius: r, fill: blue.transparentize(90%), mode: "PIE",
-//       stroke: none)
-//   })
-// )
+To know if the current point $(r,theta)$ is in shadow, we need to check if $theta$ is between the angles $beta$ and $beta'$ ($beta'$ is like $beta$ but on the other side).
+After a bit of trigonometry, we can conclude that
 
-// Notice how $theta$ looks like its inside of the blue region, but numerically, the angles don't overlap: $pi-0.5< -3 < pi+0.5$ is false. To actually check if the angle is inside, we need to add (or substract, if the signs are opposite) $2pi$ to it, to bring it in the same period as the edges. Interestingly, we don't even need to check for this situation (`if`s are costly on the GPU)! We need to compare $theta$, $theta+2pi$, and $theta-2pi$ with the $beta$s and if any of the results is true, the point is between the angles. This is how it would look in code:
+#align(center, $beta,beta'=alpha ± arcsin(R_p/r)$)
 
-// ```fs
-// // returns true if a <= b <= c.
-// bool is_ordered(float a, float b, float c) {
-//   return a <= b && b <= c;
-// }
+Ok, looks like we're done! Here's the shader code:
 
-// bool is_in_shadow(
-//   float radius,   // = r
-//   float angle,    // = θ
-//   float sun_angle // = α
-// ) {
-//   float d = acos(relative_planet_radius / radius);
-//   float l = angle - d; // = β or β'
-//   float r = angle + d; // = β' or β
-//   return
-//     is_ordered(l, angle - 2.0 * PI, r) ||
-//     is_ordered(l, angle, r) ||
-//     is_ordered(l, angle + 2.0 * PI, r);
-// }
-// ```
+```fs
+bool is_in_shadow(
+  float radius,   // = r
+  float angle,    // = θ
+  float sun_angle // = α
+) {
+  float d = acos(relative_planet_radius / radius);
+  float l = angle - d; // = β or β'
+  float r = angle + d; // = β' or β
+  return l <= angle && angle <= r;
+}
+```
 
-// Now we're actually done!
+If we actually run this, it works! But let's fast-forward a couple hundred years (Saturn has a big orbit) just to be surethat it doesn't break.
 
-// \<insert saturn image here\>
+_Oh..._
+
+Looks like we forgot that $alpha$ and $theta$ are constrained to $[-pi, pi]$ (because that's what `atan2` returns, but it could just as well have been constrained to $[0, 2pi]$, the problem would still be there, just at different angles). Let's try to come up with an example that breaks our check. If $theta$ is say $-3$, and $(beta, beta')=(pi - 0.5, pi + 0.5)$, on a unit circle it would look like this:
+
+
+#align(center,
+  cetz.canvas({
+    import cetz.draw: *
+    set-style(stroke: 0.4pt,
+      grid: (
+        stroke: gray + 0.2pt,
+        step: 0.5
+      )
+    )
+    let r = 1.3
+    scale(3)
+    grid((-1.5, -1.5), (1.5, 1.5))
+    content((r, 0), [$0$], anchor: "south-west", padding: .1)
+    content((-r,0), [$pi$], anchor: "south-east", padding: .1)
+    content((-r,0), [$-pi$], anchor: "north-east", padding: .1)
+    scale(x: -1)
+    rotate(90deg)
+    line((-1.5, 0), (1.5, 0))
+    line((0, -1.5), (0, 1.5))
+    circle((0, 0), radius: r)
+    let angl = (a, name, c, d) => {
+      line((0, 0), (r * calc.sin(a), r * calc.cos(a)), stroke: (
+        thickness: 1pt,
+        paint: c,
+      ))
+      if a != 0.0deg {
+        arc((0, 0), start: 90deg, stop: 90deg-a, radius: d, anchor: "origin", name: name)
+      }
+    }
+    angl(-3rad, "theta", red, 0.2)
+    content((name: "theta", anchor: -3rad), [$theta$], anchor: "north-west", padding: .1)
+    let beta1 = calc.pi * 1rad + 0.5rad
+    let beta2 = calc.pi * 1rad - 0.5rad
+    angl(beta1, "beta1", blue, 0.3)
+    angl(beta2, "beta2", blue, 0.4)
+    arc((0,0), anchor: "origin",
+      start: 90deg-beta1, stop: 90deg-beta2,
+      radius: r, fill: blue.transparentize(90%), mode: "PIE",
+      stroke: none)
+  })
+)
+
+Notice how $theta$ looks like its inside of the blue region, but numerically, the angles don't overlap: $pi-0.5< -3 < pi+0.5$ is false. To actually check if the angle is inside, we need to add (or substract, if the signs are opposite) $2pi$ to it, to bring it in the same period as the edges. Interestingly, we don't even need to check for this situation (`if`s are costly on the GPU)! We need to compare $theta$, $theta+2pi$, and $theta-2pi$ with the $beta$s and if any of the results is true, the point is between the angles. This is how it would look in code:
+
+```fs
+// returns true if a <= b <= c.
+bool is_ordered(float a, float b, float c) {
+  return a <= b && b <= c;
+}
+
+bool is_in_shadow(
+  float radius,   // = r
+  float angle,    // = θ
+  float sun_angle // = α
+) {
+  float d = acos(relative_planet_radius / radius);
+  float l = angle - d; // = β or β'
+  float r = angle + d; // = β' or β
+  return
+    is_ordered(l, angle - 2.0 * PI, r) ||
+    is_ordered(l, angle, r) ||
+    is_ordered(l, angle + 2.0 * PI, r);
+}
+```
+
+Now we're actually done!
+
+\<insert saturn image here\>

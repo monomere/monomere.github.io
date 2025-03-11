@@ -1,4 +1,4 @@
-#import "@local/cetz:0.3.4"
+#import "@preview/cetz:0.3.4"
 #set text(size: 15pt)
 #set page(width: auto, height: auto, margin: 0pt)
 #let windows(arr, size) = {

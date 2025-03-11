@@ -27,20 +27,24 @@
 			<time datetime="2024-03-11">11th of March 2025</time>
 			<hr>
 			<p>
-				I needed to draw the shadow of a planet on its rings. To render the rings, each point on a disk around the planet is drawn separately, and the inputs are the angle of the line from the center to the point and the length of that line. That turns out to be a polar coordinate system, where each point is parametrized by the length \(r\) and angle \(\theta\). 
+				I needed to draw the shadow of a planet on its rings. To render the rings, each point on a disk around the planet is drawn separately, and the inputs are the angle of the line from the center to the point and the length of that line. That turns out to be a polar coordinate system, where each point is parametrized by some length \(r\) and angle \(\theta\).
 			</p>
 			<p>
-				Now the shadows. Since the light source (Sun) is pretty far away (something like a trillion meters, a Terameter) we can consider its rays parallel. That means that in an ideal world the planet's "shadow" (the portion of space that light doesn't reach) is a cylinder the same radius as the planet, and its caps perpendicular to the light rays.
-				
-				To simplify things, let's consider the circle with radius \(r\) (so that each point is on that circle):
+				Now the shadows. Since the light source (Sun) is pretty far away (like a trillion meters or something) we can consider its rays parallel. That means that in an ideal world the planet's "shadow" (the portion of space that light doesn't reach) is a cylinder the same radius as the planet, and its caps perpendicular to the light rays. Since our rings are almost parallel to the planet's orbit, the shadow intersects the ring disk in a sort of rectangular shape. 
 			</p>
 			<figure>
-				<img id="geometry-graphic" src="_canvas.svg">
+				<img id="disk-graphic" src="/projects/pshine/devlog/ringshadows/_canvas4.svg">
+				<figcaption>\(R_p\) is the radius of the planet (in red) relative to the rings (so that the outer disk radius is \(1\))</figcaption>
+			</figure>
+			<p>
+				Notice how the angles of the two lines from the origin to the shadow's edge have different angles? That might feel complicated at first, since straight lines in polar coordinates are kind of weird! But let's simplify things and take a single circular "slice" of the disk, at radius \(r\).
+			</p>
+			<figure>
+				<img id="geometry-graphic" src="/projects/pshine/devlog/ringshadows/_canvas.svg">
 				<figcaption>\(\alpha\) is the angle of the Sun, \(\beta\) and \(\beta'\) are the angles of the shadow's edges.</figcaption>
 			</figure>
 			<p>
-				To know if the current point \((r,\theta)\) is in shadow, we need to check if \(\theta\) is between the angles \(\beta\) and
-				\(\beta'\). After a bit of trigonometry, we can conclude that
+				Now, since \(r\) is fixed, we only need to check if \(\theta\) falls into our shadow. That boils down to figuring out if \(\theta\) is between the angles \(\beta\) and \(\beta'\). After a bit of trigonometry, we can conclude that
 			</p>
 			<figure>
 				\(\beta,\beta' = \alpha \pm \arcsin\left(\frac{R_p}{r}\right)\)
@@ -61,20 +65,24 @@
 			<p>
 				If we actually run this, it works! But let's fast-forward a couple hundred years (Saturn has a big orbit) just to be sure that it doesn't break.
 			</p>
-				
+			
+			<p style="display: flex; flex-direction: column;">
+				<img src="/images/pshine/saturn-rings-borked.png" alt="I'm too lazy sorry :( Saturn from above, but only half of the shadow is visible."
+					style="width: 200px; align-self: center;">
+			</p>
 			<p><em>Oh...</em></p>
 				
 			<p>
-				Looks like we forgot that \(\alpha\) and \(\theta\) are constrained to \([-\pi, \pi]\). That's what
-				<code>atan2</code> returns, but it could just as well have been constrained to \([0, 2\pi]\), the problem would still be there, just at different angles. Let's try to come up with an example that breaks our check.
-				If \(\theta\) is say \(-3\), and \((\beta, \beta')=(\pi - 0.5, \pi + 0.5)\), on a unit circle it would look like this:
+				Let's try to figure out what's happening: the shadow is getting cut off at a certain angle and then it appears again. Oh! (after like an hour) Looks like we forgot that \(\alpha\) and \(\theta\) are in the range \([-\pi, \pi]\), since that's what
+				<code>atan2</code> returns<sup><a id="footnote-1-ref" href="#footnote-1" title="link to footnote 1">1</a></sup>, but the \(\beta\)s can be outside of it! Let's try to come up with an example that breaks our check.
+				Say \(\theta\) is \(-3\), and \((\beta, \beta')=(\pi - 0.5, \pi + 0.5)\). On a unit circle it would look like this:
 			</p>
 			<figure>
-				<img id="unit-circle-graphic" src="_canvas2.svg">
+				<img id="unit-circle-graphic" src="/projects/pshine/devlog/ringshadows/_canvas2.svg">
 				<!-- <figcaption></figcaption> -->
 			</figure>
 			<p>
-				Notice how \(\theta\) looks like its inside of the blue region, but numerically, the angles don't overlap: \(\pi-0.5< -3 < \pi+0.5\) is false. To actually check if the angle is inside, we need to add \(\pm 2\pi\) to it, to bring it in the same period as the edges. Interestingly, we don't even need to check for this situation (<code>if</code>s are costly on the GPU)! We can always compare \(\theta\), \(\theta+2\pi\), and \(\theta-2\pi\) with the \(\beta\)s and if any of the results is true, the point is between the angles. This is how it would look in code:
+				Notice how \(\theta\) looks like its inside of the blue region, but numerically, the angles don't overlap: \(\pi-0.5&lt; -3 &lt; \pi+0.5\) is false. To actually check if the angle is inside, we need to add \(\pm 2\pi\) to it, to bring it in the same period as the edges. Interestingly, we don't even need to check for this situation explicitly (<code>if</code>s are costly on the GPU)! We can compare \(\theta\), \(\theta+2\pi\), and \(\theta-2\pi\) with the \(\beta\)s regargless of what the values are, and if any of the results is true, the point is between the angles. This is how it would look in code:
 			</p>
 			<pre><span class="comment">// returns true if a &lt;= b &lt;= c.</span>
 <b>bool</b> is_ordered(<b>float</b> a, <b>float</b> b, <b>float</b> c) {
@@ -96,22 +104,14 @@
 }</pre>
 		<p>Here's the pretty image:</p>
 		<img src="/images/pshine/saturn-rings.png" alt="I'm too lazy sorry :( Saturn from the side, camera facing the sun.">
-		</article></main>
-		<style>
-			figure {
-				width: 100%;
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				gap: 0.5rem;
-				margin: 0;
-				padding: 0;
-			}
-			figure > img {
-				width: 70%;
-				min-width: 300px;
-			}
-		</style>
+		<p id="footnote-1">
+			1. I'm using <code>atan2</code> to get the angles, but they could just as well have been constrained to \([0, 2\pi]\), the problem would still exist, just at different angles.
+			<a href="#footnote-1-ref" title="return to text">&#8617;</a> 
+		</p>
+		</article>
+		</main>
+		<!-- <canvas id="canvas"></canvas> -->
+		<!-- <script type="module" src="src/diagram.js"></script> -->
 		<footer>
 			Copyright &copy; 2025 monomere
 		</footer>
