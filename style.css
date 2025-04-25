@@ -3,6 +3,8 @@ body {
 	flex-direction: column;
 	align-items: center;
 	font-family: sans-serif;
+	background: #121212;
+	color: #efefef;
 }
 
 a {
@@ -48,18 +50,18 @@ footer {
 pre {
 	text-wrap: nowrap;
 	overflow: scroll;
-	background: #f1f1f1;
+	background: #2f2f2f;
 	padding: 1rem;
 	border-radius: 7px;
 }
 
 pre .punct {
-	color: #777;
+	color: #555;
 	font-style: normal;
 }
 
 pre .comment {
-	color: #999;
+	color: #aaa;
 	font-style: normal;
 }
 
