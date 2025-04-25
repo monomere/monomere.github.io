@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="/style.css">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" integrity="sha384-zh0CIslj+VczCZtlzBcjt5ppRcsAmDnRem7ESsYwWwg3m/OaJ2l4x7YBZl9Kxxib" crossorigin="anonymous">
+		<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js" integrity="sha384-Rma6DA2IPUwhNxmrB/7S3Tno0YY7sFu9WSYMCuulLhIqYSGZ2gKCJWIqhBWqMQfh" crossorigin="anonymous"></script>
+		<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js" integrity="sha384-hCXGrW6PitJEwbkoStFjeJxv+fSOOQKOPbJxSfM6G5sWZjAyWhXiTIIAmQqnlLlh" crossorigin="anonymous"
+				onload="renderMathInElement(document.body);"></script>
+		<title>devlog #4 - pshine - monomere</title>
+	</head>
+	<body>
+		<header>
+			<nav>
+				<span><a href="/#projects">projects</a></span>
+				<span>&middot;</span>
+				<span><b>devlog #4</b></span>
+				<span>-</span>
+				<span><a href="/projects/pshine">pshine</a></span>
+				<span>&middot;</span>
+				<span><a href="/#about">about me</a></span>
+			</nav>
+		</header>
+		<main><article>
+			<h1>Bloom</h1>
+			<time datetime="2025-04-26">26th of April 2025</time>
+			<hr>
+			<p>
+				A modern game without bloom is like a... uhm... basically, every modern game has bloom: a simulated effect of bright light "bleeding" into its surroundings.
+				The reason behind the bleeding is that real lenses never perfectly focus on something, and realy everything bleeds into its surroundings a bit, but for light rays of normal intensity,
+				its not noticeable, unlike for something like the sun or its reflection. A physically-accurate model of bloom for a common camera with a circular lens will require simulating something called
+				an <a href="https://en.wikipedia.org/wiki/Airy_disk">"Airy disk"</a>: a disk of light and a set of diffracted concentric rings around it. As far as I can tell, the reason this is not implemented is because its a) slow, and b) not distinguishable
+				from a simple Gaussian blur, as the concentric rings are much dimmer than the central bright spot. But even with Gaussian blur there are problems!
+			</p>
+			<p>
+				The Gaussian blur required for something like bloom has to have a very large radius; while 40 pixels doesn't seem like a lot, that's 40&times;40 (1600!) texture memory fetches the GPU has to do <i>for every pixel</i>. To help with this, smart people came up
+				with an alterantive way to do a large-radius blur: downsampling the image (halving the width and height) and then upsampling and blurring it, and then finally compositing it back on the previous image. I'm not sure how to write this out in text
+				so that it's readable, so here's a diagram:
+			</p>
+			<figure>
+				<img id="pipeline-graphic" src="/projects/pshine/devlog/bloom/bloom-pipeline-dark.svg">
+				<figcaption>A 3-image bloom pipeline core.</figcaption>
+			</figure>
+			<p>
+			</p>
+			<p>
+				That's a neat trick! It greately speeds up the post-processing effect and gives better-looking results than just blur (it does have some downsides, but oh well). The issue is with implementing it with my setup. The following section is about my Vulkan
+				implementation details, so you can skip it if you don't want.
+			</p>
+			<details>
+				<summary>I don't want to spend a lot of time writing this, so don't expect much.</summary>
+				<p>
+					Before bloom, my pipeline was a neat and tidy single <code>VkRenderPass</code> with everything separated into subpasses and all the images transferred as input attachments. Since the bloom implementation requires getting the whole texture and downsampling it,
+					in a compute shader, it needs to be passed in as a sampled texture (and as a storage texture for output). That means that I had to split up the geometry and atmosphere subpass and the final composing (and imgui) subpass into separate renderpasses. Thankfully
+					it wasn't that hard (maybe even a bit less confusing than dealing with subpass dependencies and implicit layout transitions (dynamic rendering local read please be more available (vulkan 1.4 thank you))). The hard part was dealing with the syncrhonization of
+					the compute shaders (downsample and upsample). Also turned out to not be <i>that</i> complicated. If only I didn't make dumb mistakes like forgetting to change the referenced image... Also a note about layouts: since my atmosphere rendering required me to
+					read and write from the same texture (<a href="/projects/pshine/devlog/multi_atmo">for multiple atmospheres</a>), the image had to be in <code>VK_IMAGE_LAYOUT_GENERAL</code>, and that simplified things for me a bit, since I thought that doing layout transitions
+					for the bloom transient images might be kinda useless, since they're read and written to very quickly, so I kept them in the general layout. I still need to benchmark it though. Back to the other stuff now.
+				</p>
+			</details>
+		<p>
+			I'm too lazy to write more stuff, so here's a screenshot :-)
+		</p>
+		<figure>
+			<img id="screenshot" src="/images/pshine/bloom.png" alt="It's 1 am.. Earth at the bottom from very high above, atmospheric scattering and a blooming sun.">
+		</figure>
+		</article>
+		</main>
+		<footer>
+			Copyright &copy; 2025 monomere
+		</footer>
+	</body>
+</html>
