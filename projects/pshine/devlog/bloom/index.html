@@ -32,7 +32,7 @@
 			</p>
 			<p>
 				The Gaussian blur required for something like bloom has to have a very large radius; while 40 pixels doesn't seem like a lot, that's 40&times;40 (1600!) texture memory fetches
-				the GPU has to do <i>for every pixel</i>. To help with this, smart people came up with an alterantive way to do a large-radius blur: downsampling the image
+				the GPU has to do <i>for every pixel</i>. To help with this, smart people came up with an alternative way to do a large-radius blur: downsampling the image
 				(halving the width and height) and then upsampling and blurring it, and then finally compositing it back on the previous image. I'm not sure how to write this out in text
 				so that it's readable, so here's a diagram:
 			</p>
