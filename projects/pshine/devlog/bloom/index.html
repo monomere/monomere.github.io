@@ -28,19 +28,21 @@
 			<hr>
 			<p>
 				A modern game without bloom is like a... uhm... basically, every modern game has bloom: a simulated effect of bright light "bleeding" into its surroundings.
-				The reason behind the bleeding is that real lenses never perfectly focus on something, and realy everything bleeds into its surroundings a bit, but for light rays of normal intensity,
-				its not noticeable, unlike for something like the sun or its reflection. A physically-accurate model of bloom for a common camera with a circular lens will require simulating something called
-				an <a href="https://en.wikipedia.org/wiki/Airy_disk">"Airy disk"</a>: a disk of light and a set of diffracted concentric rings around it. As far as I can tell, the reason this is not implemented is because its a) slow, and b) not distinguishable
-				from a simple Gaussian blur, as the concentric rings are much dimmer than the central bright spot. But even with Gaussian blur there are problems!
+				The reason behind the bleeding is that real lenses never perfectly focus on something, so really, everything bleeds into its surroundings a bit. For light rays of normal intensity
+				its not noticeable, but for something like the sun or its reflection, you can clearly see the effect. A physically-accurate model of bloom for a common camera with a circular lens
+				will require simulating something called an <a href="https://en.wikipedia.org/wiki/Airy_disk">"Airy disk"</a>: a disk of light and a set of diffracted concentric rings around it.
+				As far as I can tell, the reason this is not implemented is because its a) slow, and b) not distinguishable from a simple Gaussian blur, as the concentric rings are much dimmer
+				than the central bright spot. But even with Gaussian blur there are problems!
 			</p>
 			<p>
-				The Gaussian blur required for something like bloom has to have a very large radius; while 40 pixels doesn't seem like a lot, that's 40&times;40 (1600!) texture memory fetches the GPU has to do <i>for every pixel</i>. To help with this, smart people came up
-				with an alterantive way to do a large-radius blur: downsampling the image (halving the width and height) and then upsampling and blurring it, and then finally compositing it back on the previous image. I'm not sure how to write this out in text
+				The Gaussian blur required for something like bloom has to have a very large radius; while 40 pixels doesn't seem like a lot, that's 40&times;40 (1600!) texture memory fetches
+				the GPU has to do <i>for every pixel</i>. To help with this, smart people came up with an alterantive way to do a large-radius blur: downsampling the image
+				(halving the width and height) and then upsampling and blurring it, and then finally compositing it back on the previous image. I'm not sure how to write this out in text
 				so that it's readable, so here's a diagram:
 			</p>
 			<figure>
 				<img id="pipeline-graphic" src="/projects/pshine/devlog/bloom/bloom-pipeline-dark.svg">
-				<figcaption>A 3-image bloom pipeline core.</figcaption>
+				<figcaption>A 3-image bloom pipeline core. The bottom arrows also composite (add) onto the target image.</figcaption>
 			</figure>
 			<p>
 			</p>
